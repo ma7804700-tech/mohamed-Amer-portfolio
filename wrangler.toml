@@ -1,0 +1,8 @@
+name = "mohamed-amer-portfolio"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-05"
+
+[[d1_databases]]
+binding = "PROJECTS_DB"
+database_name = "mohamed-amer-projects"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

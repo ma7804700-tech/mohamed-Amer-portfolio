@@ -172,7 +172,7 @@ export default function Portfolio({ onSelect }) {
           </div>
           <div className="portfolio-scroll-progress">
             <span>{t('portfolio.scrollHint')}</span>
-            <span className="portfolio-scroll-count" aria-live="polite">{String(Math.min(activeProjectIndex + 1, Math.max(visibleProjects.length, 1))).padStart(2, '0')} / {String(visibleProjects.length).padStart(2, '0')}</span>
+            <span className="portfolio-scroll-count" dir="ltr" aria-live="polite">{String(Math.min(activeProjectIndex + 1, Math.max(visibleProjects.length, 1))).padStart(2, '0')} / {String(visibleProjects.length).padStart(2, '0')}</span>
             <div className="portfolio-progress-track" role="progressbar" aria-label={t('portfolio.progress')} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <span ref={progressRef} />
             </div>

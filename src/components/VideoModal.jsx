@@ -14,6 +14,7 @@ export default function VideoModal({ project, onClose }) {
   const externalUrl = project?.externalUrl || ''
   const externalEmbedUrl = getVideoEmbedUrl(externalUrl)
   const isDirectVideo = /\.(mp4|webm|ogg|mov)(?:$|[?#])/i.test(externalUrl)
+  const showExternalLink = !project?.videoSrc && !failed && Boolean(openUrl)
 
   useEffect(() => {
     setFailed(false)
@@ -49,19 +50,16 @@ export default function VideoModal({ project, onClose }) {
             <>
               <video className="video-player" src={externalUrl} controls playsInline preload="metadata" onError={() => setFailed(true)} />
               <button className="fullscreen-button" onClick={fullscreen} aria-label={t('modal.fullscreen')}><Maximize2 size={17} /></button>
-              <a className="drive-fallback-link" href={openUrl} target="_blank" rel="noreferrer">{t('modal.openLink')} <ArrowUpRight size={13} /></a>
             </>
           ) : externalEmbedUrl && !failed ? (
             <>
               <iframe className="video-frame video-player" src={externalEmbedUrl} title={`${project.title} video preview`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen onError={() => setFailed(true)} />
               <button className="fullscreen-button" onClick={fullscreen} aria-label={t('modal.fullscreen')}><Maximize2 size={17} /></button>
-              <a className="drive-fallback-link" href={openUrl} target="_blank" rel="noreferrer">{t('modal.openLink')} <ArrowUpRight size={13} /></a>
             </>
           ) : previewUrl && !failed ? (
             <>
               <iframe className="video-frame video-player" src={previewUrl} title={`${project.title} video preview`} allow="autoplay; picture-in-picture" allowFullScreen onError={() => setFailed(true)} />
               <button className="fullscreen-button" onClick={fullscreen} aria-label={t('modal.fullscreen')}><Maximize2 size={17} /></button>
-              <a className="drive-fallback-link" href={openUrl} target="_blank" rel="noreferrer">{t('modal.drive')} <ArrowUpRight size={13} /></a>
             </>
           ) : (
             <div className="video-fallback">
@@ -71,6 +69,7 @@ export default function VideoModal({ project, onClose }) {
             </div>
           )}
         </div>
+        {showExternalLink && <a className="modal-external-link" href={openUrl} target="_blank" rel="noreferrer">{previewUrl ? t('modal.drive') : t('modal.openLink')} <ArrowUpRight size={13} /></a>}
         <div className="modal-info">
           <div><span className="modal-category">{[project.category, project.year, project.client].filter(Boolean).join(' / ')}</span><h2 id="modal-title">{project.title}</h2></div>
           <p>{project.description || (language === 'ar' ? `مشروع من تصنيف ${project.category}.` : `Selected ${project.category.toLowerCase()} work.`)}</p>

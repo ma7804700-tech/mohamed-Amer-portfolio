@@ -5,4 +5,4 @@ compatibility_date = "2026-10-05"
 [[d1_databases]]
 binding = "PROJECTS_DB"
 database_name = "mohamed-amer-projects"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "1c2b2b52-d000-4c22-af9f-afb561967873"

@@ -17,7 +17,7 @@ export default function PortfolioCard({ project, index, onSelect }) {
   const category = translate(language, categoryKey)
 
   return (
-    <button className={`project-card project-${project.shape}`} data-project-card onClick={() => onSelect(project)} aria-label={`${language === 'ar' ? 'افتح ملف المشروع' : 'Open case file'} ${project.title}`}>
+    <button className={`project-card project-${project.shape}`} data-project-card dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={() => onSelect(project)} aria-label={`${language === 'ar' ? 'افتح ملف المشروع' : 'Open case file'} ${project.title}`}>
       <span className="case-file-tab">{language === 'ar' ? 'ملف قضية' : 'CASE FILE'} <span>NO. {displayId}</span></span>
       <span className="case-paperclip" aria-hidden="true" />
       <div className="case-file-paper">

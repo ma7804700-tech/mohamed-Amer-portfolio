@@ -107,15 +107,24 @@ button { cursor: pointer; }
 .filter-row { display: flex; gap: 7px; flex-wrap: wrap; margin: 30px 0 32px; }
 .filter-row button { border: 1px solid var(--line); background: transparent; padding: 8px 12px; font: 9px var(--mono); transition: background .2s; }
 .filter-row button:hover, .filter-row .filter-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.project-grid-wrap { position: relative; margin: 35px -4px 0; }
-.project-grid { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 38px 28px; align-items: start; }
+.project-scroll-stage { position: relative; margin: 35px -4px 0; }
+.project-scroll-pin { position: sticky; top: 82px; width: 100%; height: calc(100svh - 82px); display: flex; align-items: center; padding-bottom: 48px; overflow: hidden; }
+.project-scroll-viewport { width: 100%; overflow: hidden; direction: ltr; }
+.project-scroll-track { position: relative; display: flex; align-items: stretch; width: max-content; gap: clamp(22px, 3vw, 42px); padding: 24px 18px 42px; direction: ltr; will-change: transform; }
+.project-grid { position: relative; z-index: 2; display: flex; align-items: stretch; gap: inherit; width: max-content; direction: ltr; }
+.project-scroll-track > .crime-threads { top: 24px; left: 18px; }
+.portfolio-scroll-progress { position: absolute; z-index: 5; inset: auto 16px 13px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px 12px; align-items: center; color: var(--ink); font: 8px var(--mono); letter-spacing: .07em; text-transform: uppercase; pointer-events: none; }
+.portfolio-scroll-count { color: var(--red); white-space: nowrap; }
+.portfolio-progress-track { grid-column: 1 / -1; height: 2px; overflow: hidden; background: var(--line); }
+.portfolio-progress-track > span { display: block; width: 100%; height: 100%; background: var(--red); transform: scaleX(0); transform-origin: left center; }
+html[dir="rtl"] .portfolio-progress-track > span { transform-origin: right center; }
 .crime-threads { position: absolute; inset: 0; z-index: 4; overflow: visible; pointer-events: none; }
 .thread-shadow { fill: none; stroke: #1b1412; stroke-width: 3.6; opacity: .28; }
 .thread-core { fill: none; stroke: #d5c5af; stroke-width: 2.4; stroke-linecap: round; }
 .thread-line { fill: none; stroke: #a51f29; stroke-width: 1.1; stroke-linecap: round; opacity: .82; filter: drop-shadow(0 1px 1px #17080866); }
 .thread-pin-shadow { fill: #211716; opacity: .52; }
 .thread-pin { fill: #a51f29; stroke: #ddcdb5; stroke-width: 1; }
-.project-card { display: block; width: 100%; text-align: start; border: 0; background: none; padding: 0; position: relative; min-width: 0; isolation: isolate; }
+.project-card { display: block; flex: 0 0 clamp(285px, 30vw, 380px); width: clamp(285px, 30vw, 380px); text-align: start; border: 0; background: none; padding: 0; position: relative; min-width: 0; isolation: isolate; }
 .case-file-tab { position: absolute; z-index: 3; top: -13px; left: 16px; min-width: 118px; padding: 7px 12px 9px; color: #33291e; background: #d7c5a6; border: 1px solid #ae9875; border-bottom: 0; clip-path: polygon(0 0, 100% 0, 96% 100%, 5% 93%); display: flex; justify-content: space-between; gap: 12px; font: 8px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
 .case-file-tab span { opacity: .7; }
 .case-paperclip { position: absolute; z-index: 4; top: 7px; right: 15px; width: 14px; height: 27px; border: 2px solid #9e9990; border-bottom-color: transparent; border-radius: 9px 9px 0 0; transform: rotate(7deg); opacity: .86; }
@@ -319,16 +328,12 @@ html[data-theme="dark"] .admin-project-edit { color: #211f1b; background: #34342
 .modal-info p { color: #c2beb5; max-width: 380px; font-size: 11px; line-height: 1.6; margin: 0; align-self: end; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-@media (max-width: 1100px) {
-  .project-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 22px; }
-}
 @media (max-width: 900px) {
   :root { --page-gutter: 32px; }
   .section-wrap { width: calc(100% - 64px); }
   .site-header { padding-inline: 32px; }
   .nav-links { gap: 18px; }
   .nav-links .nav-availability { padding: 9px; font-size: 8px; }
-  .project-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 22px; }
   .preference-capsule { gap: 4px; padding: 3px 4px; }
   .preference-toggle { min-width: 32px; height: 28px; padding-inline: 6px; }
   .language-toggle { min-width: 36px; }
@@ -350,6 +355,11 @@ html[data-theme="dark"] .admin-project-edit { color: #211f1b; background: #34342
   .section-wrap { width: calc(100% - 40px); }
   .section-pad { padding-block: 77px; }
   .site-header { height: 66px; padding-inline: 20px; }
+  .project-scroll-pin { top: 66px; height: calc(100svh - 66px); padding-bottom: 46px; }
+  .project-card { flex-basis: min(82vw, 350px); width: min(82vw, 350px); }
+  .project-scroll-track { gap: 22px; padding: 20px 15px 40px; }
+  .project-scroll-track > .crime-threads { top: 20px; left: 15px; }
+  .portfolio-scroll-progress { inset-inline: 13px; bottom: 12px; font-size: 7px; }
   .brand-mark { width: 34px; height: 34px; }
   .header-tools { gap: 6px; }
   .preference-capsule { gap: 4px; padding: 3px 4px; }
@@ -391,8 +401,6 @@ html[data-theme="dark"] .admin-project-edit { color: #211f1b; background: #34342
   .section-intro { max-width: 132px; font-size: 11px; line-height: 1.5; margin: 0 0 4px 10px; }
   .filter-row { gap: 5px; margin: 24px 0 28px; }
   .filter-row button { font-size: 8px; padding: 7px 8px; }
-  .project-grid-wrap { margin-inline: 0; }
-  .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 29px 12px; }
   .project-card:nth-child(odd) { --case-tilt: -.7deg; }
   .project-card:nth-child(even) { --case-tilt: .7deg; }
   .case-file-paper { padding: 14px 8px 8px; }
@@ -616,4 +624,12 @@ html[dir="rtl"] .copyright { text-align: left; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .project-scroll-stage { height: auto !important; }
+  .project-scroll-pin { position: relative; top: auto; height: auto; min-height: 0; padding: 0; overflow: visible; }
+  .project-scroll-viewport { overflow: visible; }
+  .project-scroll-track { display: block; width: 100%; padding: 0; transform: none !important; }
+  .project-scroll-track > .crime-threads { display: none; }
+  .project-grid { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 29px 12px; }
+  .project-card { width: 100%; }
+  .portfolio-scroll-progress { display: none; }
 }

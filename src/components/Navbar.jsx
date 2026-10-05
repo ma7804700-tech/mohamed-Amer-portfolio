@@ -32,19 +32,13 @@ export default function Navbar() {
       </nav>
       <div className="header-tools">
         <div className="preference-capsule" role="group" aria-label={t('controls.preferences')}>
-          <div className="capsule-group theme-segments" role="group" aria-label={t('controls.theme')}>
-            <button className={`capsule-segment ${theme === 'light' ? 'is-selected' : ''}`} aria-label={t('controls.day')} title={t('controls.day')} aria-pressed={theme === 'light'} onClick={() => theme !== 'light' && toggleTheme()}>
-              <Sun size={14} aria-hidden="true" /><span>{t('controls.day')}</span>
-            </button>
-            <button className={`capsule-segment ${theme === 'dark' ? 'is-selected' : ''}`} aria-label={t('controls.night')} title={t('controls.night')} aria-pressed={theme === 'dark'} onClick={() => theme !== 'dark' && toggleTheme()}>
-              <Moon size={14} aria-hidden="true" /><span>{t('controls.night')}</span>
-            </button>
-          </div>
+          <button className="preference-toggle theme-toggle" aria-label={theme === 'dark' ? t('controls.switchDay') : t('controls.switchNight')} title={theme === 'dark' ? t('controls.switchDay') : t('controls.switchNight')} aria-pressed={theme === 'dark'} onClick={toggleTheme}>
+            {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+          </button>
           <span className="capsule-divider" aria-hidden="true" />
-          <div className="capsule-group language-segments" role="group" aria-label={t('controls.language')}>
-            <button className={`capsule-segment ${language === 'en' ? 'is-selected' : ''}`} aria-label="English" title="English" aria-pressed={language === 'en'} onClick={() => language !== 'en' && toggleLanguage()}>EN</button>
-            <button className={`capsule-segment ${language === 'ar' ? 'is-selected' : ''}`} lang="ar" aria-label="العربية" title="العربية" aria-pressed={language === 'ar'} onClick={() => language !== 'ar' && toggleLanguage()}>عربي</button>
-          </div>
+          <button className="preference-toggle language-toggle" lang={language === 'en' ? 'ar' : 'en'} aria-label={language === 'en' ? t('controls.switchArabic') : t('controls.switchEnglish')} title={language === 'en' ? t('controls.switchArabic') : t('controls.switchEnglish')} onClick={toggleLanguage}>
+            {language === 'en' ? 'عربي' : 'EN'}
+          </button>
         </div>
         <button className="menu-toggle" aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')} aria-expanded={open} onClick={() => setOpen(!open)}>
         {open ? <X /> : <Menu />}

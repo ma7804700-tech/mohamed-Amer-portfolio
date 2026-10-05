@@ -3,12 +3,13 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 const PreferencesContext = createContext(null)
 
 export function PreferencesProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('ma-theme') || 'light')
+  const [theme, setTheme] = useState('dark')
   const [language, setLanguage] = useState(() => localStorage.getItem('ma-language') || 'en')
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#171715' : '#f4f0e8')
     localStorage.setItem('ma-theme', theme)
   }, [theme])
 

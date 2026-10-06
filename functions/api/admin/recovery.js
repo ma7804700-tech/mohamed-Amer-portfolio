@@ -38,46 +38,31 @@ async function consumeSendLimit(db, bucket, now) {
   `).bind(bucket, now, now, MAX_SENDS_PER_HOUR, SEND_COOLDOWN_SECONDS).first()
 }
 
-function validWhatsAppConfig(env) {
-  const version = env.WHATSAPP_GRAPH_API_VERSION
-  const recipients = (env.WHATSAPP_RECOVERY_NUMBERS || '').split(',').map((number) => number.trim())
-  return typeof env.WHATSAPP_ACCESS_TOKEN === 'string' &&
-    env.WHATSAPP_ACCESS_TOKEN.length > 0 &&
-    /^\d{5,30}$/.test(env.WHATSAPP_PHONE_NUMBER_ID || '') &&
-    recipients.length >= 1 &&
-    recipients.length <= 5 &&
-    new Set(recipients).size === recipients.length &&
-    recipients.every((number) => /^\d{8,15}$/.test(number)) &&
-    /^[a-z0-9_]{1,512}$/.test(env.WHATSAPP_RECOVERY_TEMPLATE || '') &&
-    /^[a-z]{2}(?:_[A-Z]{2})?$/.test(env.WHATSAPP_RECOVERY_LANGUAGE || 'ar') &&
-    /^v\d+\.\d+$/.test(version || '')
+function validRecoveryEmailConfig(env) {
+  const emailPattern = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/
+  const fromAddress = env.EMAIL_RECOVERY_FROM?.match(/<([^<>]+)>$/)?.[1] || env.EMAIL_RECOVERY_FROM
+  return typeof env.RESEND_API_KEY === 'string' &&
+    env.RESEND_API_KEY.length > 0 &&
+    emailPattern.test(env.ADMIN_RECOVERY_EMAIL || '') &&
+    emailPattern.test(fromAddress || '')
 }
 
-async function sendWhatsAppCode(env, recipient, code) {
-  const response = await fetch(
-    `https://graph.facebook.com/${env.WHATSAPP_GRAPH_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: recipient,
-        type: 'template',
-        template: {
-          name: env.WHATSAPP_RECOVERY_TEMPLATE,
-          language: { code: env.WHATSAPP_RECOVERY_LANGUAGE || 'ar' },
-          components: [{
-            type: 'body',
-            parameters: [{ type: 'text', text: code }],
-          }],
-        },
-      }),
+async function sendRecoveryCode(env, code) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
     },
-  )
-  if (!response.ok) throw new Error(`WhatsApp delivery was rejected with status ${response.status}.`)
+    body: JSON.stringify({
+      from: env.EMAIL_RECOVERY_FROM,
+      to: [env.ADMIN_RECOVERY_EMAIL],
+      subject: 'رمز استعادة كلمة مرور إدارة موقع Mohamed Amer',
+      text: `رمز التحقق: ${code}\n\nينتهي هذا الرمز خلال 5 دقائق، ويمكن استخدامه مرة واحدة فقط. إذا لم تطلب تغيير كلمة المرور فتجاهل هذه الرسالة.`,
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:28px;background:#f4f0e8;color:#171715"><p style="font-size:12px;color:#746957">MOHAMED AMER · WEBSITE ADMIN</p><h1 style="font-size:22px">استعادة كلمة مرور الإدارة</h1><p>استخدم الرمز التالي لتعيين كلمة مرور جديدة:</p><p dir="ltr" style="padding:16px;background:#ffe600;text-align:center;font-size:30px;font-weight:bold;letter-spacing:8px">${code}</p><p>ينتهي الرمز خلال 5 دقائق ويمكن استخدامه مرة واحدة فقط.</p><p style="font-size:12px;color:#746957">إذا لم تطلب استعادة كلمة المرور، فتجاهل هذه الرسالة.</p></div>`,
+    }),
+  })
+  if (!response.ok) throw new Error(`Email recovery provider rejected the request with status ${response.status}.`)
 }
 
 async function readBody(request) {
@@ -99,7 +84,7 @@ async function readBody(request) {
 export async function onRequestPost({ request, env }) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return json({ error: 'Invalid request origin.' }, 403)
   if (!env.PROJECTS_DB || !env.ADMIN_SESSION_SECRET) return json({ error: 'Password recovery is not configured.' }, 503)
-  if (!validWhatsAppConfig(env)) return json({ error: 'WhatsApp password recovery is not configured yet.' }, 503)
+  if (!validRecoveryEmailConfig(env)) return json({ error: 'Email password recovery is not configured yet.' }, 503)
 
   const parsed = await readBody(request)
   if (parsed.error === 'too-large') return json({ error: 'Request body is too large.' }, 413)
@@ -130,26 +115,20 @@ export async function onRequestPost({ request, env }) {
         created_at = excluded.created_at
     `).bind(codeHash, now + CODE_TTL_SECONDS, now).run()
 
-    const recipients = env.WHATSAPP_RECOVERY_NUMBERS.split(',').map((number) => number.trim())
-    const results = await Promise.allSettled(recipients.map((recipient) => sendWhatsAppCode(env, recipient, code)))
-    const deliveredCount = results.filter((result) => result.status === 'fulfilled').length
-    if (!deliveredCount) {
+    try {
+      await sendRecoveryCode(env, code)
+    } catch (error) {
       await env.PROJECTS_DB.prepare("DELETE FROM admin_recovery_challenges WHERE id = 'default'").run()
-      results.forEach((result) => {
-        if (result.status === 'rejected') console.error('WhatsApp recovery message could not be sent:', result.reason)
-      })
-      return json({ error: 'WhatsApp could not deliver the recovery code. Check the approved template and API settings.' }, 502)
+      console.error('Email recovery message could not be sent:', error)
+      return json({ error: 'The recovery email could not be sent. Check the email provider and verified sender settings.' }, 502)
     }
 
-    results.forEach((result) => {
-      if (result.status === 'rejected') console.error('WhatsApp recovery message could not be delivered to one recovery number:', result.reason)
-    })
-    return json({ sent: true, deliveredTo: deliveredCount, expiresIn: CODE_TTL_SECONDS })
+    return json({ sent: true, expiresIn: CODE_TTL_SECONDS })
   }
 
   if (body.action === 'reset-password') {
     if (typeof body.code !== 'string' || !/^\d{6}$/.test(body.code)) {
-      return json({ error: 'Enter the six-digit code sent to WhatsApp.' }, 400)
+      return json({ error: 'Enter the six-digit code sent to your recovery email.' }, 400)
     }
     if (typeof body.newPassword !== 'string' || body.newPassword.length < 12 || body.newPassword.length > 128) {
       return json({ error: 'The new password must be 12 to 128 characters long.' }, 400)

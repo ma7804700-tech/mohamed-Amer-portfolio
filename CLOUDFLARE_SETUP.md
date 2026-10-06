@@ -31,7 +31,7 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
    npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0002_project_controls.sql
    ```
 
-   Existing installations should also apply the website settings and WhatsApp recovery migrations if they have not already been applied:
+   Existing installations should also apply the website settings and email recovery migrations if they have not already been applied:
 
    ```powershell
    npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0003_site_content.sql
@@ -59,16 +59,15 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
 
    Paste the generated value at the prompt. Do not use the admin password as the signing secret.
 
-7. Configure WhatsApp password recovery in the Cloudflare Pages dashboard under **Settings → Variables and Secrets**:
+7. Configure email password recovery:
 
-   - Add `WHATSAPP_ACCESS_TOKEN` as an encrypted secret. Never put this token in the website, GitHub, or a chat message.
-   - Add `WHATSAPP_PHONE_NUMBER_ID` with the phone-number ID shown in the Meta WhatsApp app.
-   - Add `WHATSAPP_RECOVERY_NUMBERS` with both trusted recipient numbers in international format using digits only (no `+`), separated by a comma and no spaces: `201024345291,201016193589`.
-   - Add `WHATSAPP_RECOVERY_TEMPLATE` with the name of an approved WhatsApp Utility template whose message body contains exactly one `{{1}}` parameter for the six-digit code.
-   - Add `WHATSAPP_RECOVERY_LANGUAGE` using the exact language/locale of that approved template (for example, `ar` or `en_US`).
-   - Add `WHATSAPP_GRAPH_API_VERSION` using a Graph API version currently supported by the Meta app (for example, `vXX.X`).
+   - Create a Resend account at [resend.com](https://resend.com/) and create an API key.
+   - In Cloudflare Pages **Settings → Variables and Secrets → Production**, add `RESEND_API_KEY` as an encrypted secret. Never place it in website code, GitHub, or a chat message.
+   - Add `ADMIN_RECOVERY_EMAIL` as `123onetwo123123@gmail.com`.
+   - Add `EMAIL_RECOVERY_FROM` with a sender address verified in Resend, such as `Mohamed Amer <no-reply@your-verified-domain.com>`.
+   - Resend's test sender (`onboarding@resend.dev`) is limited to the email address registered with that Resend account. To send to the recovery address above, use a verified sender domain if Resend does not allow that recipient as the account owner.
 
-   Create these settings in the **Production** environment. Recovery codes expire after five minutes; sending is limited to three codes per hour globally and per client IP, with a one-minute cooldown. Codes are stored only as keyed hashes, accepted once, and protected by a five-attempt limit. Changing the password invalidates existing admin sessions.
+   Recovery codes expire after five minutes; sending is limited to three codes per hour globally and per client IP, with a one-minute cooldown. Codes are stored only as keyed hashes, accepted once, and protected by a five-attempt limit. Changing the password invalidates existing admin sessions.
 
 8. Build and deploy:
 
@@ -80,7 +79,7 @@ The D1 binding in `wrangler.toml` makes the same database available to the Pages
 
 ## Local Pages Functions
 
-Copy `.dev.vars.example` to `.dev.vars`, replace both example values with a local admin password and a long random signing secret, then run:
+Copy `.dev.vars.example` to `.dev.vars`, replace the example admin password, signing secret, Resend API key, and verified sender, then run:
 
 ```powershell
 npx wrangler d1 execute mohamed-amer-projects --local --file=./schema.sql

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, KeyRound, MessageCircle, Send, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Check, KeyRound, Mail, Send, ShieldCheck } from 'lucide-react'
 
 async function readResponse(response) {
   const data = await response.json().catch(() => ({}))
@@ -29,7 +29,7 @@ export default function AdminRecovery({ onBack }) {
           body: JSON.stringify({ action: 'request-code' }),
         }))
         setStep('reset')
-        setMessage('إذا كان الاسترداد مهيّأ، أرسلنا رمزًا إلى رقمي واتساب الإدارة. الرمز صالح لخمس دقائق.')
+        setMessage('أرسلنا رمز تحقق إلى بريد الإدارة 123onetwo123123@gmail.com. الرمز صالح لخمس دقائق.')
       } else {
         if (newPassword !== confirmPassword) throw new Error('كلمتا المرور غير متطابقتين.')
         await readResponse(await fetch('/api/admin/recovery', {
@@ -63,11 +63,11 @@ export default function AdminRecovery({ onBack }) {
 
   return (
     <div className="admin-recovery">
-      <div className="admin-recovery-icon">{step === 'request' ? <MessageCircle size={20} /> : <ShieldCheck size={20} />}</div>
+      <div className="admin-recovery-icon">{step === 'request' ? <Mail size={20} /> : <ShieldCheck size={20} />}</div>
       <h3>{step === 'request' ? 'استعادة كلمة مرور الإدارة' : 'التحقق وتعيين كلمة مرور جديدة'}</h3>
       <p>{step === 'request'
-        ? 'سنرسل رمز تحقق لمرة واحدة إلى رقم واتساب الإدارة الموثوق.'
-        : 'أدخل الرمز المرسل إلى واتساب، ثم اختر كلمة مرور جديدة لا تقل عن 12 حرفًا.'}</p>
+        ? 'سنرسل رمز تحقق لمرة واحدة إلى بريد الإدارة 123onetwo123123@gmail.com.'
+        : 'أدخل الرمز المرسل إلى بريدك، ثم اختر كلمة مرور جديدة لا تقل عن 12 حرفًا.'}</p>
       {error && <p className="admin-message" role="alert">{error}</p>}
       {message && <p className="admin-recovery-success" role="status">{message}</p>}
       <form className="admin-form" onSubmit={submit}>
@@ -79,7 +79,7 @@ export default function AdminRecovery({ onBack }) {
           </>
         )}
         <button className="button button-yellow" type="submit" disabled={busy}>
-          {busy ? 'جارٍ التحقق…' : step === 'request' ? 'إرسال رمز واتساب' : 'تغيير كلمة المرور'}
+          {busy ? 'جارٍ التحقق…' : step === 'request' ? 'إرسال رمز إلى البريد' : 'تغيير كلمة المرور'}
           {step === 'request' ? <Send size={15} /> : <KeyRound size={15} />}
         </button>
       </form>

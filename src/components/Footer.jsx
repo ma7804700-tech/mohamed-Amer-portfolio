@@ -282,7 +282,7 @@ export default function Footer() {
                     <label>{t('admin.password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
                     <button className="button button-yellow" type="submit" disabled={busy}>{busy ? t('admin.working') : t('admin.unlock')}</button>
                   </form>
-                  <button className="admin-recovery-toggle" type="button" onClick={() => { setError(''); setRecoveryOpen(true) }}><KeyRound size={14} />نسيت كلمة المرور؟ استعادة عبر واتساب</button></>
+                  <button className="admin-recovery-toggle" type="button" onClick={() => { setError(''); setRecoveryOpen(true) }}><KeyRound size={14} />نسيت كلمة المرور؟ استعادة عبر البريد</button></>
             ) : (
               <>
                 <nav className="admin-tabs" aria-label="Website administration">

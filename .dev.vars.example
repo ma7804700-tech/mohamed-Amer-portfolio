@@ -1,5 +1,2 @@
 ADMIN_PASSWORD="replace-with-a-strong-password"
 ADMIN_SESSION_SECRET="replace-with-a-long-random-secret"
-RESEND_API_KEY="replace-with-a-resend-api-key"
-ADMIN_RECOVERY_EMAIL="123onetwo123123@gmail.com"
-EMAIL_RECOVERY_FROM="Mohamed Amer <verified-sender@your-domain.com>"

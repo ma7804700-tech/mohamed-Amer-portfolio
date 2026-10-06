@@ -6,7 +6,7 @@ import { usePreferences } from '../context/PreferencesContext'
 import { useSiteContent } from '../context/SiteContentContext'
 import { translate } from '../data/translations'
 import SiteEditor from './SiteEditor'
-import AdminRecovery from './AdminRecovery'
+import AdminPasswordChange from './AdminPasswordChange'
 
 export default function Footer() {
   const projectAdminEnabled = import.meta.env.VITE_PROJECT_ADMIN !== 'false'
@@ -18,7 +18,7 @@ export default function Footer() {
   const [editingId, setEditingId] = useState('')
   const [editDraft, setEditDraft] = useState(null)
   const [password, setPassword] = useState('')
-  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [passwordChanged, setPasswordChanged] = useState(false)
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [category, setCategory] = useState('Reels')
@@ -97,6 +97,7 @@ export default function Footer() {
   const openAdmin = async () => {
     setAdminOpen(true)
     setAdminTab('projects')
+    setPasswordChanged(false)
     setError('')
     try {
       const response = await fetch('/api/admin/session')
@@ -123,6 +124,7 @@ export default function Footer() {
       const data = await readApiResponse(response, 'admin.loginError')
       setAuthenticated(true)
       setPassword('')
+      setPasswordChanged(false)
       await Promise.all([loadProjects(), reloadSiteContent()])
     } catch (requestError) {
       setError(requestError.message)
@@ -275,21 +277,24 @@ export default function Footer() {
               <button type="button" onClick={() => setAdminOpen(false)} aria-label={t('admin.close')}><X size={19} /></button>
             </header>
             {error && <p className="admin-message" role="alert">{error}</p>}
+            {passwordChanged && <p className="admin-password-changed" role="status">تم تغيير كلمة المرور. أدخل كلمة المرور الجديدة لتسجيل الدخول مرة أخرى.</p>}
             {!authenticated ? (
-              recoveryOpen
-                ? <AdminRecovery onBack={() => setRecoveryOpen(false)} />
-                : <><form className="admin-form" onSubmit={login}>
-                    <label>{t('admin.password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
-                    <button className="button button-yellow" type="submit" disabled={busy}>{busy ? t('admin.working') : t('admin.unlock')}</button>
-                  </form>
-                  <button className="admin-recovery-toggle" type="button" onClick={() => { setError(''); setRecoveryOpen(true) }}><KeyRound size={14} />نسيت كلمة المرور؟ استعادة عبر البريد</button></>
+              <form className="admin-form" onSubmit={login}>
+                <label>{t('admin.password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
+                <button className="button button-yellow" type="submit" disabled={busy}>{busy ? t('admin.working') : t('admin.unlock')}</button>
+              </form>
             ) : (
               <>
                 <nav className="admin-tabs" aria-label="Website administration">
                   <button type="button" className={adminTab === 'projects' ? 'is-active' : ''} onClick={() => setAdminTab('projects')}><FolderKanban size={15} />{t('admin.projectsTab')}</button>
                   <button type="button" className={adminTab === 'site' ? 'is-active' : ''} onClick={() => setAdminTab('site')}><Globe2 size={15} />{t('admin.siteTab')}</button>
+                  <button type="button" className={adminTab === 'password' ? 'is-active' : ''} onClick={() => setAdminTab('password')}><KeyRound size={15} />تغيير كلمة المرور</button>
                 </nav>
-                {adminTab === 'site' ? <SiteEditor /> : <div className="admin-projects-tab">
+                {adminTab === 'site'
+                  ? <SiteEditor />
+                  : adminTab === 'password'
+                    ? <AdminPasswordChange onChanged={() => { setAuthenticated(false); setAdminTab('projects'); setPasswordChanged(true) }} />
+                    : <div className="admin-projects-tab">
                 <div className="admin-overview">
                   <div><span>{t('admin.totalProjects')}</span><strong>{projects.length.toString().padStart(2, '0')}</strong></div>
                   <div><span>{t('admin.customProjects')}</span><strong>{addedProjectCount.toString().padStart(2, '0')}</strong></div>

@@ -31,11 +31,11 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
    npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0002_project_controls.sql
    ```
 
-   Existing installations should also apply the website settings and email recovery migrations if they have not already been applied:
+   Existing installations should also apply the website settings and admin password migration if they have not already been applied:
 
    ```powershell
    npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0003_site_content.sql
-   npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0004_admin_whatsapp_recovery.sql
+   npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0005_admin_password_changes.sql
    ```
 
 4. Create the Pages project once, if it does not exist:
@@ -59,17 +59,7 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
 
    Paste the generated value at the prompt. Do not use the admin password as the signing secret.
 
-7. Configure email password recovery:
-
-   - Create a Resend account at [resend.com](https://resend.com/) and create an API key.
-   - In Cloudflare Pages **Settings → Variables and Secrets → Production**, add `RESEND_API_KEY` as an encrypted secret. Never place it in website code, GitHub, or a chat message.
-   - Add `ADMIN_RECOVERY_EMAIL` as `123onetwo123123@gmail.com`.
-   - Add `EMAIL_RECOVERY_FROM` with a sender address verified in Resend, such as `Mohamed Amer <no-reply@your-verified-domain.com>`.
-   - Resend's test sender (`onboarding@resend.dev`) is limited to the email address registered with that Resend account. To send to the recovery address above, use a verified sender domain if Resend does not allow that recipient as the account owner.
-
-   Recovery codes expire after five minutes; sending is limited to three codes per hour globally and per client IP, with a one-minute cooldown. Codes are stored only as keyed hashes, accepted once, and protected by a five-attempt limit. Changing the password invalidates existing admin sessions.
-
-8. Build and deploy:
+7. Build and deploy:
 
    ```powershell
    npm run cf:deploy
@@ -77,15 +67,17 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
 
 The D1 binding in `wrangler.toml` makes the same database available to the Pages Functions in production. Do not commit an actual password or database credentials.
 
+After logging in to the website administration panel, use the **Change password** tab to update the admin password. The current password is required; the new password must be at least 12 characters. Changing it signs out the current admin session, so sign in again with the new password.
+
 ## Local Pages Functions
 
-Copy `.dev.vars.example` to `.dev.vars`, replace the example admin password, signing secret, Resend API key, and verified sender, then run:
+Copy `.dev.vars.example` to `.dev.vars`, replace the example admin password and signing secret, then run:
 
 ```powershell
 npx wrangler d1 execute mohamed-amer-projects --local --file=./schema.sql
 npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0002_project_controls.sql
 npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0003_site_content.sql
-npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0004_admin_whatsapp_recovery.sql
+npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0005_admin_password_changes.sql
 npm run build
 npm run cf:dev
 ```

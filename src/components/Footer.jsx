@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpRight, CirclePlus, FolderKanban, LockKeyhole, Pencil, Search, Save, Trash2, X } from 'lucide-react'
-import { contactLinks } from '../data/contact'
+import { ArrowDown, ArrowUp, ArrowUpRight, CirclePlus, FolderKanban, Globe2, LockKeyhole, Pencil, Search, Save, Trash2, X } from 'lucide-react'
 import { sortedProjects } from '../data/projects.ts'
 import { getGoogleDriveOpenUrl } from '../utils/googleDrive.ts'
 import { usePreferences } from '../context/PreferencesContext'
+import { useSiteContent } from '../context/SiteContentContext'
 import { translate } from '../data/translations'
+import SiteEditor from './SiteEditor'
 
 export default function Footer() {
   const projectAdminEnabled = import.meta.env.VITE_PROJECT_ADMIN !== 'false'
   const [adminOpen, setAdminOpen] = useState(false)
+  const [adminTab, setAdminTab] = useState('projects')
   const [authenticated, setAuthenticated] = useState(false)
   const [projects, setProjects] = useState([])
   const [addOpen, setAddOpen] = useState(false)
@@ -24,6 +26,7 @@ export default function Footer() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { language } = usePreferences()
+  const { siteContent, reloadSiteContent } = useSiteContent()
   const t = (key) => translate(language, key)
   const visibleAdminProjects = useMemo(() => projects.filter((project) => {
     const matchesQuery = `${project.title} ${project.externalUrl}`.toLocaleLowerCase().includes(projectQuery.trim().toLocaleLowerCase())
@@ -51,13 +54,16 @@ export default function Footer() {
     }
   }, [adminOpen])
   const socials = [
-    ['footer.whatsapp1', contactLinks.whatsappPrimary],
-    ['footer.whatsapp2', contactLinks.whatsappSecondary],
-    ['footer.call', contactLinks.phone],
-    ['footer.email1', `mailto:${contactLinks.emailPrimary}`],
-    ['footer.email2', `mailto:${contactLinks.emailSecondary}`],
-    ['footer.telegram', contactLinks.telegram],
-    ['footer.linktree', contactLinks.linktree],
+    ['footer.whatsapp1', siteContent.links.whatsappPrimary],
+    ['footer.whatsapp2', siteContent.links.whatsappSecondary],
+    ['footer.call', siteContent.links.phone],
+    ['footer.email1', `mailto:${siteContent.links.emailPrimary}`],
+    ['footer.email2', `mailto:${siteContent.links.emailSecondary}`],
+    ['footer.telegram', siteContent.links.telegram],
+    ['footer.linktree', siteContent.links.linktree],
+    ['footer.instagram', siteContent.links.instagram],
+    ['footer.youtube', siteContent.links.youtube],
+    ['footer.linkedin', siteContent.links.linkedin],
   ]
 
   const loadProjects = async () => {
@@ -88,12 +94,15 @@ export default function Footer() {
 
   const openAdmin = async () => {
     setAdminOpen(true)
+    setAdminTab('projects')
     setError('')
     try {
       const response = await fetch('/api/admin/session')
       const data = await readApiResponse(response, 'admin.loadError')
       setAuthenticated(data.authenticated)
-      if (data.authenticated) await loadProjects()
+      if (data.authenticated) {
+        await Promise.all([loadProjects(), reloadSiteContent()])
+      }
     } catch (requestError) {
       setError(requestError.message)
     }
@@ -112,7 +121,7 @@ export default function Footer() {
       const data = await readApiResponse(response, 'admin.loginError')
       setAuthenticated(true)
       setPassword('')
-      await loadProjects()
+      await Promise.all([loadProjects(), reloadSiteContent()])
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -239,6 +248,7 @@ export default function Footer() {
       await readApiResponse(response, 'admin.logoutError')
       setAuthenticated(false)
       setProjects([])
+      setAdminTab('projects')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -249,15 +259,15 @@ export default function Footer() {
   return (
     <>
       <footer className="footer section-wrap">
-        <a className="footer-brand" href="#top"><span className="brand-mark">MA<span>®</span></span><span>MOHAMED<br />AMER</span></a>
+        <a className="footer-brand" href="#top"><span className="brand-mark">{siteContent.branding.monogram}<span>®</span></span><span>{siteContent.branding.name.split(' ').map((word) => <span key={word}>{word}<br /></span>)}</span></a>
         <p>{t('footer.role').split('<br />').map((line) => <span key={line}>{line}<br /></span>)}</p>
-        <div className="footer-socials" aria-label={t('footer.socials')}>{socials.map(([key, url]) => <a key={key} href={url} target={url.startsWith('https:') ? '_blank' : undefined} rel={url.startsWith('https:') ? 'noreferrer' : undefined}>{t(key)}<ArrowUpRight size={12} /></a>)}</div>
+        <div className="footer-socials" aria-label={t('footer.socials')}>{socials.filter(([, url]) => url).map(([key, url]) => <a key={key} href={url} target={url.startsWith('https:') ? '_blank' : undefined} rel={url.startsWith('https:') ? 'noreferrer' : undefined}>{t(key)}<ArrowUpRight size={12} /></a>)}</div>
         <span className="copyright">{t('footer.copyright').split('<br />').map((line) => <span key={line}>{line}<br /></span>)}</span>
         {projectAdminEnabled && <button className="admin-open-button" type="button" onClick={openAdmin}><LockKeyhole size={13} />{t('admin.open')}</button>}
       </footer>
       {adminOpen && (
         <div className="admin-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setAdminOpen(false)}>
-          <section className="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+          <section className={`admin-panel${authenticated && adminTab === 'site' ? ' has-site-editor' : ''}`} role="dialog" aria-modal="true" aria-labelledby="admin-title">
             <header className="admin-panel-header">
               <div className="admin-heading"><span className="admin-heading-icon"><FolderKanban size={20} /></span><div><span>{t('admin.eyebrow')}</span><h2 id="admin-title">{t('admin.title')}</h2><p>{t('admin.subtitle')}</p></div></div>
               <button type="button" onClick={() => setAdminOpen(false)} aria-label={t('admin.close')}><X size={19} /></button>
@@ -270,6 +280,11 @@ export default function Footer() {
               </form>
             ) : (
               <>
+                <nav className="admin-tabs" aria-label="Website administration">
+                  <button type="button" className={adminTab === 'projects' ? 'is-active' : ''} onClick={() => setAdminTab('projects')}><FolderKanban size={15} />{t('admin.projectsTab')}</button>
+                  <button type="button" className={adminTab === 'site' ? 'is-active' : ''} onClick={() => setAdminTab('site')}><Globe2 size={15} />{t('admin.siteTab')}</button>
+                </nav>
+                {adminTab === 'site' ? <SiteEditor /> : <div className="admin-projects-tab">
                 <div className="admin-overview">
                   <div><span>{t('admin.totalProjects')}</span><strong>{projects.length.toString().padStart(2, '0')}</strong></div>
                   <div><span>{t('admin.customProjects')}</span><strong>{addedProjectCount.toString().padStart(2, '0')}</strong></div>
@@ -318,6 +333,7 @@ export default function Footer() {
                 </div>
                 <button className="admin-restore" type="button" onClick={restoreDefaultPortfolio} disabled={busy}>{t('admin.restoreDefaults')}</button>
                 <button className="admin-logout" type="button" onClick={logout} disabled={busy}>{t('admin.logout')}</button>
+                </div>}
               </>
             )}
           </section>

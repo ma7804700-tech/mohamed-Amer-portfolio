@@ -2,16 +2,19 @@ import { ArrowDown, ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { usePreferences } from '../context/PreferencesContext'
 import { translate } from '../data/translations'
-import { publicAsset } from '../utils/publicAsset'
+import { siteAsset } from '../utils/siteAsset'
+import { useSiteContent } from '../context/SiteContentContext'
 
 export default function Hero() {
   const { language } = usePreferences()
+  const { siteContent } = useSiteContent()
+  const { media, links } = siteContent
   const t = (key) => translate(language, key)
 
   return (
     <section className="hero section-wrap" id="top">
-      <video className="hero-background-video" autoPlay muted loop playsInline preload="metadata" poster={publicAsset('/media/motion-design-poster.jpg')} aria-hidden="true">
-        <source src={publicAsset('/media/motion-design.mp4')} type="video/mp4" />
+      <video className="hero-background-video" autoPlay muted loop playsInline preload="metadata" poster={siteAsset(media.heroPoster)} aria-hidden="true">
+        <source src={siteAsset(media.heroVideo)} type="video/mp4" />
       </video>
       <div className="hero-meta"><span>{t('hero.location')}</span><span>{t('hero.worldwide')}</span></div>
       <div className="hero-layout">
@@ -24,15 +27,15 @@ export default function Hero() {
           <div className="hero-actions">
             <a className="button button-yellow" href="#work">{t('hero.view')} <ArrowDown size={15} /></a>
             <a className="button button-paper" href="#about">{t('hero.about')} <ArrowDownRight size={15} /></a>
-            <a className="text-link" href="#contact">{t('hero.letsWork')} <ArrowUpRight size={15} /></a>
+            {links.whatsappPrimary && <a className="text-link" href={links.whatsappPrimary} target="_blank" rel="noreferrer">{t('hero.letsWork')} <ArrowUpRight size={15} /></a>}
           </div>
         </div>
-        <div className="hero-art" aria-label="Editorial portrait collage">
+        <div className="hero-art" aria-label={t('hero.portraitAlt')}>
           <div className="hero-paper-shadow" />
           <img
             className="hero-portrait"
-            src={publicAsset('/media/mohamed-cutout.png')}
-            alt={language === 'ar' ? 'صورة محمد عامر الفنية' : 'Mohamed Amer portrait artwork'}
+            src={siteAsset(media.heroPortrait)}
+            alt={t('hero.portraitAlt')}
           />
           <div className="hero-yellow-shape" />
           <div className="hero-red-shape" />
@@ -40,7 +43,7 @@ export default function Hero() {
             <span>{t('hero.years')}<br />{t('hero.editing')}</span><small>{t('hero.counting')}</small>
           </motion.div>
           <div className="tape tape-hero" />
-          <span className="scribble hero-scribble">{language === 'ar' ? 'كل حكاية تبدأ بفكرة' : 'the good stuff starts here'}</span>
+          <span className="scribble hero-scribble">{t('hero.scribble')}</span>
           <div className="hero-stamp">{t('hero.cut')}</div>
         </div>
       </div>

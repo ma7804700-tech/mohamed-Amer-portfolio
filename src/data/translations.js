@@ -1,4 +1,4 @@
-const translations = {
+export const translations = {
   en: {
     'controls.preferences': 'Display preferences',
     'controls.theme': 'Color theme',
@@ -37,6 +37,8 @@ const translations = {
     'hero.counting': 'AND COUNTING ↗',
     'hero.scroll': 'SCROLL A LITTLE, STAY A WHILE',
     'hero.cut': 'CUT WITH INTENT',
+    'hero.scribble': 'the good stuff starts here',
+    'hero.portraitAlt': 'Mohamed Amer portrait artwork',
     'portfolio.kicker': '01 / THE PORTFOLIO',
     'portfolio.selected': 'SELECTED',
     'portfolio.work': 'WORK',
@@ -79,6 +81,7 @@ const translations = {
     'about.kicker': '03 / THE PERSON BEHIND THE TIMELINE',
     'about.location': 'CAIRO · EVERYWHERE',
     'about.caption': 'MOHAMED AMER / 2026',
+    'about.portraitAlt': 'Illustrated portrait artwork for Mohamed Amer',
     'about.hello': 'nice to meet you!',
     'about.overline': 'EDITOR. DESIGNER. PROFESSIONAL REWATCHER.',
     'about.title1': 'THE PERSON',
@@ -92,8 +95,11 @@ const translations = {
     'about.outlook': 'I believe editing is more than assembling clips: it brings story, rhythm, movement, sound, and design together to create an engaging visual experience. My goal is to deliver work that catches attention, communicates clearly, and leaves a lasting impression.',
     'about.contact': 'CONTACT ME',
     'about.years': 'YEARS MAKING<br />THINGS MOVE',
+    'about.yearsValue': '06+',
     'about.stories': 'WAYS TO TELL<br />A GOOD STORY',
+    'about.storiesValue': '∞',
     'about.frame': 'FRAME AT A<br />TIME, ALWAYS',
+    'about.frameValue': '01',
     'process.kicker': '04 / FROM FIRST NOTE TO FINAL FRAME',
     'process.promise': 'A GOOD PROCESS MAKES GOOD WORK',
     'process.how': 'HOW THE',
@@ -129,10 +135,15 @@ const translations = {
     'footer.email2': 'Email 2',
     'footer.telegram': 'Telegram',
     'footer.linktree': 'Linktree',
-    'admin.open': 'MANAGE PROJECTS',
+    'footer.instagram': 'INSTAGRAM',
+    'footer.youtube': 'YOUTUBE',
+    'footer.linkedin': 'LINKEDIN',
+    'admin.open': 'MANAGE WEBSITE',
+    'admin.projectsTab': 'Projects',
+    'admin.siteTab': 'Edit website',
     'admin.eyebrow': 'PRIVATE PORTFOLIO TOOLS',
-    'admin.title': 'Manage projects',
-    'admin.subtitle': 'Organize, edit and publish your selected work.',
+    'admin.title': 'Website studio',
+    'admin.subtitle': 'Shape your pages, projects, palette, media and contact details.',
     'admin.close': 'Close project manager',
     'admin.password': 'Admin password',
     'admin.unlock': 'UNLOCK',
@@ -219,6 +230,8 @@ const translations = {
     'hero.counting': 'والمزيد قادم ↗',
     'hero.scroll': 'تابع التصفّح واكتشف المزيد',
     'hero.cut': 'كل لقطة لها هدف',
+    'hero.scribble': 'كل حكاية تبدأ بفكرة',
+    'hero.portraitAlt': 'صورة محمد عامر الفنية',
     'portfolio.kicker': '01 / معرض الأعمال',
     'portfolio.selected': 'أعمال',
     'portfolio.work': 'مختارة',
@@ -261,6 +274,7 @@ const translations = {
     'about.kicker': '03 / الشخص خلف خطّ الزمن',
     'about.location': 'القاهرة · وكل مكان',
     'about.caption': 'محمد عامر / 2026',
+    'about.portraitAlt': 'صورة فنية لمحمد عامر',
     'about.hello': 'أهلًا، سعيد بلقائك!',
     'about.overline': 'محرر فيديو. مصمم موشن. صانع حكايات.',
     'about.title1': 'الحكاية',
@@ -274,8 +288,11 @@ const translations = {
     'about.outlook': 'أؤمن أن المونتاج ليس مجرد تجميع للقطات؛ بل عملية إبداعية تجمع القصة والإيقاع والحركة والصوت والتصميم لصناعة تجربة بصرية مؤثرة. هدفي أن أقدّم فيديو احترافيًا يلفت الانتباه، ويوصل الرسالة بوضوح، ويترك انطباعًا لدى المشاهد.',
     'about.contact': 'تواصل معي',
     'about.years': 'سنوات من صناعة<br />الفيديو',
+    'about.yearsValue': '+6',
     'about.stories': 'طريقة لحكاية<br />قصة جميلة',
+    'about.storiesValue': '∞',
     'about.frame': 'إطارًا بعد<br />إطار، دائمًا',
+    'about.frameValue': '01',
     'process.kicker': '04 / من أول فكرة إلى آخر إطار',
     'process.promise': 'العمل الجيد يبدأ بخطوات واضحة',
     'process.how': 'كيف',
@@ -311,10 +328,15 @@ const translations = {
     'footer.email2': 'البريد 2',
     'footer.telegram': 'تيليجرام',
     'footer.linktree': 'لينكتري',
-    'admin.open': 'إدارة المشاريع',
+    'footer.instagram': 'إنستغرام',
+    'footer.youtube': 'يوتيوب',
+    'footer.linkedin': 'لينكدإن',
+    'admin.open': 'إدارة الموقع',
+    'admin.projectsTab': 'المشاريع',
+    'admin.siteTab': 'تعديل الموقع',
     'admin.eyebrow': 'أدوات خاصة بصاحب الموقع',
-    'admin.title': 'إدارة المشاريع',
-    'admin.subtitle': 'رتّب أعمالك، وعدّل بياناتها، وأضف مشاريع جديدة.',
+    'admin.title': 'استوديو الموقع',
+    'admin.subtitle': 'تحكّم في محتوى الموقع وأقسامه وألوانه وصوره وروابطه ومشاريعه.',
     'admin.close': 'إغلاق إدارة المشاريع',
     'admin.password': 'كلمة مرور الإدارة',
     'admin.unlock': 'دخول',
@@ -365,6 +387,15 @@ const translations = {
   },
 }
 
+let siteOverrides = { en: {}, ar: {} }
+
+export function setTranslationOverrides(overrides) {
+  siteOverrides = {
+    en: overrides?.en && typeof overrides.en === 'object' ? overrides.en : {},
+    ar: overrides?.ar && typeof overrides.ar === 'object' ? overrides.ar : {},
+  }
+}
+
 export function translate(language, key) {
-  return translations[language]?.[key] ?? translations.en[key] ?? key
+  return siteOverrides[language]?.[key] ?? translations[language]?.[key] ?? translations.en[key] ?? key
 }

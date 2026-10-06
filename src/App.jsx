@@ -10,9 +10,19 @@ import Footer from './components/Footer'
 import VideoModal from './components/VideoModal'
 import PaperTexture from './components/PaperTexture'
 import CustomCursor from './components/CustomCursor'
+import { useSiteContent } from './context/SiteContentContext'
 
 export default function App() {
   const [selectedProject, setSelectedProject] = useState(null)
+  const { siteContent } = useSiteContent()
+  const sections = {
+    hero: <Hero />,
+    work: <Portfolio onSelect={setSelectedProject} />,
+    services: <Services />,
+    about: <About />,
+    process: <Process />,
+    contact: <CTA />,
+  }
 
   return (
     <>
@@ -20,12 +30,7 @@ export default function App() {
       <CustomCursor />
       <Navbar />
       <main>
-        <Hero />
-        <Portfolio onSelect={setSelectedProject} />
-        <Services />
-        <About />
-        <Process />
-        <CTA />
+        {siteContent.sectionOrder.map((section) => <div className="site-section-slot" key={section}>{sections[section]}</div>)}
       </main>
       <Footer />
       {selectedProject && <VideoModal project={selectedProject} onClose={() => setSelectedProject(null)} />}

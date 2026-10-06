@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowUpRight, Menu, Moon, Sun, X } from 'lucide-react'
-import { contactLinks } from '../data/contact'
 import { usePreferences } from '../context/PreferencesContext'
+import { useSiteContent } from '../context/SiteContentContext'
 import { translate } from '../data/translations'
 
 const navLinks = [
@@ -14,13 +14,15 @@ const navLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const { theme, language, toggleTheme, toggleLanguage } = usePreferences()
+  const { siteContent } = useSiteContent()
+  const { branding, links } = siteContent
   const t = (key) => translate(language, key)
 
   return (
     <header className="site-header">
-      <a className="brand" href="#top" aria-label="Mohamed Amer home">
-        <span className="brand-mark">MA<span>®</span></span>
-        <span className="brand-name">MOHAMED<br />AMER</span>
+      <a className="brand" href="#top" aria-label={`${branding.name} home`}>
+        <span className="brand-mark">{branding.monogram}<span>®</span></span>
+        <span className="brand-name">{branding.name.split(' ').map((word) => <span key={word}>{word}<br /></span>)}</span>
       </a>
       <nav className={`nav-links ${open ? 'is-open' : ''}`} aria-label={t('nav.label')}>
         {navLinks.map(([key, href], index) => (
@@ -28,7 +30,7 @@ export default function Navbar() {
             <span className="nav-index">0{index + 1}</span>{t(key)}
           </a>
         ))}
-        <a className="nav-availability" href={contactLinks.whatsappPrimary} target="_blank" rel="noreferrer">{t('nav.available')} <ArrowUpRight size={13} /></a>
+        {links.whatsappPrimary && <a className="nav-availability" href={links.whatsappPrimary} target="_blank" rel="noreferrer">{t('nav.available')} <ArrowUpRight size={13} /></a>}
       </nav>
       <div className="header-tools">
         <div className="preference-capsule" role="group" aria-label={t('controls.preferences')}>

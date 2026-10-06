@@ -40,13 +40,44 @@ async function consumeSendLimit(db, bucket, now) {
 
 function validWhatsAppConfig(env) {
   const version = env.WHATSAPP_GRAPH_API_VERSION
+  const recipients = (env.WHATSAPP_RECOVERY_NUMBERS || '').split(',').map((number) => number.trim())
   return typeof env.WHATSAPP_ACCESS_TOKEN === 'string' &&
     env.WHATSAPP_ACCESS_TOKEN.length > 0 &&
     /^\d{5,30}$/.test(env.WHATSAPP_PHONE_NUMBER_ID || '') &&
-    /^\d{8,15}$/.test(env.WHATSAPP_RECOVERY_NUMBER || '') &&
+    recipients.length >= 1 &&
+    recipients.length <= 5 &&
+    new Set(recipients).size === recipients.length &&
+    recipients.every((number) => /^\d{8,15}$/.test(number)) &&
     /^[a-z0-9_]{1,512}$/.test(env.WHATSAPP_RECOVERY_TEMPLATE || '') &&
     /^[a-z]{2}(?:_[A-Z]{2})?$/.test(env.WHATSAPP_RECOVERY_LANGUAGE || 'ar') &&
     /^v\d+\.\d+$/.test(version || '')
+}
+
+async function sendWhatsAppCode(env, recipient, code) {
+  const response = await fetch(
+    `https://graph.facebook.com/${env.WHATSAPP_GRAPH_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: recipient,
+        type: 'template',
+        template: {
+          name: env.WHATSAPP_RECOVERY_TEMPLATE,
+          language: { code: env.WHATSAPP_RECOVERY_LANGUAGE || 'ar' },
+          components: [{
+            type: 'body',
+            parameters: [{ type: 'text', text: code }],
+          }],
+        },
+      }),
+    },
+  )
+  if (!response.ok) throw new Error(`WhatsApp delivery was rejected with status ${response.status}.`)
 }
 
 async function readBody(request) {
@@ -99,44 +130,21 @@ export async function onRequestPost({ request, env }) {
         created_at = excluded.created_at
     `).bind(codeHash, now + CODE_TTL_SECONDS, now).run()
 
-    let delivery
-    try {
-      delivery = await fetch(
-        `https://graph.facebook.com/${env.WHATSAPP_GRAPH_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: env.WHATSAPP_RECOVERY_NUMBER,
-            type: 'template',
-            template: {
-              name: env.WHATSAPP_RECOVERY_TEMPLATE,
-              language: { code: env.WHATSAPP_RECOVERY_LANGUAGE || 'ar' },
-              components: [{
-                type: 'body',
-                parameters: [{ type: 'text', text: code }],
-              }],
-            },
-          }),
-        },
-      )
-    } catch (error) {
+    const recipients = env.WHATSAPP_RECOVERY_NUMBERS.split(',').map((number) => number.trim())
+    const results = await Promise.allSettled(recipients.map((recipient) => sendWhatsAppCode(env, recipient, code)))
+    const deliveredCount = results.filter((result) => result.status === 'fulfilled').length
+    if (!deliveredCount) {
       await env.PROJECTS_DB.prepare("DELETE FROM admin_recovery_challenges WHERE id = 'default'").run()
-      console.error('WhatsApp recovery message could not be sent:', error)
-      return json({ error: 'WhatsApp could not send the recovery code. Check the WhatsApp API configuration.' }, 502)
+      results.forEach((result) => {
+        if (result.status === 'rejected') console.error('WhatsApp recovery message could not be sent:', result.reason)
+      })
+      return json({ error: 'WhatsApp could not deliver the recovery code. Check the approved template and API settings.' }, 502)
     }
 
-    if (!delivery.ok) {
-      await env.PROJECTS_DB.prepare("DELETE FROM admin_recovery_challenges WHERE id = 'default'").run()
-      console.error('WhatsApp recovery message was rejected with status:', delivery.status)
-      return json({ error: 'WhatsApp rejected the recovery message. Check the approved template and API settings.' }, 502)
-    }
-
-    return json({ sent: true, expiresIn: CODE_TTL_SECONDS })
+    results.forEach((result) => {
+      if (result.status === 'rejected') console.error('WhatsApp recovery message could not be delivered to one recovery number:', result.reason)
+    })
+    return json({ sent: true, deliveredTo: deliveredCount, expiresIn: CODE_TTL_SECONDS })
   }
 
   if (body.action === 'reset-password') {

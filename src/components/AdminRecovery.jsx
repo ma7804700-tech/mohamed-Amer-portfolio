@@ -29,7 +29,7 @@ export default function AdminRecovery({ onBack }) {
           body: JSON.stringify({ action: 'request-code' }),
         }))
         setStep('reset')
-        setMessage('إذا كان الاسترداد مهيّأ، أرسلنا رمزًا إلى رقم واتساب الإدارة. الرمز صالح لخمس دقائق.')
+        setMessage('إذا كان الاسترداد مهيّأ، أرسلنا رمزًا إلى رقمي واتساب الإدارة. الرمز صالح لخمس دقائق.')
       } else {
         if (newPassword !== confirmPassword) throw new Error('كلمتا المرور غير متطابقتين.')
         await readResponse(await fetch('/api/admin/recovery', {

@@ -63,7 +63,7 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
 
    - Add `WHATSAPP_ACCESS_TOKEN` as an encrypted secret. Never put this token in the website, GitHub, or a chat message.
    - Add `WHATSAPP_PHONE_NUMBER_ID` with the phone-number ID shown in the Meta WhatsApp app.
-   - Add `WHATSAPP_RECOVERY_NUMBER` with the trusted recipient number in international format using digits only (no `+`).
+   - Add `WHATSAPP_RECOVERY_NUMBERS` with both trusted recipient numbers in international format using digits only (no `+`), separated by a comma and no spaces: `201024345291,201016193589`.
    - Add `WHATSAPP_RECOVERY_TEMPLATE` with the name of an approved WhatsApp Utility template whose message body contains exactly one `{{1}}` parameter for the six-digit code.
    - Add `WHATSAPP_RECOVERY_LANGUAGE` using the exact language/locale of that approved template (for example, `ar` or `en_US`).
    - Add `WHATSAPP_GRAPH_API_VERSION` using a Graph API version currently supported by the Meta app (for example, `vXX.X`).

@@ -39,7 +39,7 @@ export async function onRequestGet({ env }) {
 export async function onRequestPost({ request, env }) {
   if (!isSameOrigin(request)) return json({ error: 'Invalid request origin.' }, 403)
   if (!env.PROJECTS_DB || !env.ADMIN_SESSION_SECRET) return json({ error: 'Project storage is not configured.' }, 503)
-  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET)) return json({ error: 'Admin login required.' }, 401)
+  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET, env.PROJECTS_DB)) return json({ error: 'Admin login required.' }, 401)
 
   const contentLength = Number(request.headers.get('Content-Length') || 0)
   if (contentLength > 8192) return json({ error: 'Request body is too large.' }, 413)
@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestPatch({ request, env }) {
   if (!isSameOrigin(request)) return json({ error: 'Invalid request origin.' }, 403)
   if (!env.PROJECTS_DB || !env.ADMIN_SESSION_SECRET) return json({ error: 'Project storage is not configured.' }, 503)
-  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET)) return json({ error: 'Admin login required.' }, 401)
+  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET, env.PROJECTS_DB)) return json({ error: 'Admin login required.' }, 401)
 
   const contentLength = Number(request.headers.get('Content-Length') || 0)
   if (contentLength > 32768) return json({ error: 'Request body is too large.' }, 413)
@@ -159,7 +159,7 @@ export async function onRequestPatch({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   if (!isSameOrigin(request)) return json({ error: 'Invalid request origin.' }, 403)
   if (!env.PROJECTS_DB || !env.ADMIN_SESSION_SECRET) return json({ error: 'Project storage is not configured.' }, 503)
-  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET)) return json({ error: 'Admin login required.' }, 401)
+  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET, env.PROJECTS_DB)) return json({ error: 'Admin login required.' }, 401)
 
   const id = new URL(request.url).searchParams.get('id')
   if (!id || id.length > 64) return json({ error: 'Choose a valid project.' }, 400)

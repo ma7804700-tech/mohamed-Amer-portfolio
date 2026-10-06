@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpRight, CirclePlus, FolderKanban, Globe2, LockKeyhole, Pencil, Search, Save, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpRight, CirclePlus, FolderKanban, Globe2, KeyRound, LockKeyhole, Pencil, Search, Save, Trash2, X } from 'lucide-react'
 import { sortedProjects } from '../data/projects.ts'
 import { getGoogleDriveOpenUrl } from '../utils/googleDrive.ts'
 import { usePreferences } from '../context/PreferencesContext'
 import { useSiteContent } from '../context/SiteContentContext'
 import { translate } from '../data/translations'
 import SiteEditor from './SiteEditor'
+import AdminRecovery from './AdminRecovery'
 
 export default function Footer() {
   const projectAdminEnabled = import.meta.env.VITE_PROJECT_ADMIN !== 'false'
@@ -17,6 +18,7 @@ export default function Footer() {
   const [editingId, setEditingId] = useState('')
   const [editDraft, setEditDraft] = useState(null)
   const [password, setPassword] = useState('')
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [category, setCategory] = useState('Reels')
@@ -274,10 +276,13 @@ export default function Footer() {
             </header>
             {error && <p className="admin-message" role="alert">{error}</p>}
             {!authenticated ? (
-              <form className="admin-form" onSubmit={login}>
-                <label>{t('admin.password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
-                <button className="button button-yellow" type="submit" disabled={busy}>{busy ? t('admin.working') : t('admin.unlock')}</button>
-              </form>
+              recoveryOpen
+                ? <AdminRecovery onBack={() => setRecoveryOpen(false)} />
+                : <><form className="admin-form" onSubmit={login}>
+                    <label>{t('admin.password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
+                    <button className="button button-yellow" type="submit" disabled={busy}>{busy ? t('admin.working') : t('admin.unlock')}</button>
+                  </form>
+                  <button className="admin-recovery-toggle" type="button" onClick={() => { setError(''); setRecoveryOpen(true) }}><KeyRound size={14} />نسيت كلمة المرور؟ استعادة عبر واتساب</button></>
             ) : (
               <>
                 <nav className="admin-tabs" aria-label="Website administration">

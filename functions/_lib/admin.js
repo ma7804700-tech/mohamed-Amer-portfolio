@@ -14,6 +14,13 @@ function decodeBase64Url(value) {
   return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0))
 }
 
+function constantTimeEqual(expected, actual) {
+  if (expected.length !== actual.length) return false
+  let difference = 0
+  for (let index = 0; index < expected.length; index += 1) difference |= expected[index] ^ actual[index]
+  return difference === 0
+}
+
 async function sign(value, secret) {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -25,10 +32,10 @@ async function sign(value, secret) {
   return base64Url(new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(value))))
 }
 
-export async function createSession(secret, request) {
+export async function createSession(secret, request, passwordVersion = 0) {
   const now = Math.floor(Date.now() / 1000)
   const header = base64Url(encoder.encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })))
-  const payload = base64Url(encoder.encode(JSON.stringify({ exp: now + SESSION_SECONDS, iat: now })))
+  const payload = base64Url(encoder.encode(JSON.stringify({ exp: now + SESSION_SECONDS, iat: now, pv: passwordVersion })))
   const unsigned = `${header}.${payload}`
   const token = `${unsigned}.${await sign(unsigned, secret)}`
   const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : ''
@@ -40,7 +47,7 @@ export function clearSession(request) {
   return `${SESSION_COOKIE}=; HttpOnly${secure}; SameSite=Strict; Path=/api; Max-Age=0`
 }
 
-export async function isAuthorized(request, secret) {
+export async function isAuthorized(request, secret, db) {
   const token = request.headers.get('Cookie')?.split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${SESSION_COOKIE}=`))
@@ -50,19 +57,25 @@ export async function isAuthorized(request, secret) {
   const [header, payload, signature, ...extra] = token.split('.')
   if (!header || !payload || !signature || extra.length) return false
 
+  let claims
   try {
     const unsigned = `${header}.${payload}`
     const expected = decodeBase64Url(await sign(unsigned, secret))
     const actual = decodeBase64Url(signature)
-    if (expected.length !== actual.length) return false
-    let difference = 0
-    for (let index = 0; index < expected.length; index += 1) difference |= expected[index] ^ actual[index]
-    if (difference !== 0) return false
-    const claims = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload)))
-    return Number.isInteger(claims.exp) && claims.exp > Math.floor(Date.now() / 1000)
+    if (!constantTimeEqual(expected, actual)) return false
+    claims = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload)))
   } catch {
     return false
   }
+
+  if (!Number.isInteger(claims.exp) || claims.exp <= Math.floor(Date.now() / 1000)) return false
+  if (db) {
+    const password = await db.prepare(
+      "SELECT updated_at FROM admin_passwords WHERE id = 'default'",
+    ).first()
+    if (password && claims.pv !== password.updated_at) return false
+  }
+  return true
 }
 
 export function json(data, status = 200, headers = {}) {
@@ -84,11 +97,37 @@ export async function matchesPassword(input, expected) {
   ])
   const actualBytes = new Uint8Array(actual)
   const correctBytes = new Uint8Array(correct)
-  let difference = 0
-  for (let index = 0; index < actualBytes.length; index += 1) difference |= actualBytes[index] ^ correctBytes[index]
-  return difference === 0
+  return constantTimeEqual(actualBytes, correctBytes)
+}
+
+export async function hashAdminPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits'])
+  const digest = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' },
+    key,
+    256,
+  )
+  return {
+    salt: base64Url(salt),
+    hash: base64Url(new Uint8Array(digest)),
+  }
+}
+
+export async function matchesStoredPassword(password, salt, expectedHash) {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits'])
+  const digest = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: decodeBase64Url(salt), iterations: 120000, hash: 'SHA-256' },
+    key,
+    256,
+  )
+  return constantTimeEqual(new Uint8Array(digest), decodeBase64Url(expectedHash))
 }
 
 export async function hashClientIp(ip, secret) {
   return sign(ip, secret)
+}
+
+export function secureHashEqual(left, right) {
+  return constantTimeEqual(encoder.encode(left), encoder.encode(right))
 }

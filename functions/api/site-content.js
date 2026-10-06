@@ -95,7 +95,7 @@ export async function onRequestGet({ env }) {
 export async function onRequestPut({ request, env }) {
   if (!isSameOrigin(request)) return json({ error: 'Invalid request origin.' }, 403)
   if (!env.PROJECTS_DB || !env.ADMIN_SESSION_SECRET) return json({ error: 'Website storage is not configured.' }, 503)
-  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET)) return json({ error: 'Admin login required.' }, 401)
+  if (!await isAuthorized(request, env.ADMIN_SESSION_SECRET, env.PROJECTS_DB)) return json({ error: 'Admin login required.' }, 401)
 
   const contentLength = Number(request.headers.get('Content-Length') || 0)
   if (contentLength > 96 * 1024) return json({ error: 'Website settings are too large.' }, 413)

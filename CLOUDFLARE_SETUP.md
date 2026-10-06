@@ -31,6 +31,13 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
    npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0002_project_controls.sql
    ```
 
+   Existing installations should also apply the website settings and WhatsApp recovery migrations if they have not already been applied:
+
+   ```powershell
+   npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0003_site_content.sql
+   npx wrangler d1 execute mohamed-amer-projects --remote --file=./migrations/0004_admin_whatsapp_recovery.sql
+   ```
+
 4. Create the Pages project once, if it does not exist:
 
    ```powershell
@@ -52,7 +59,18 @@ Project links are public through a Cloudflare Pages Function and stored in D1. T
 
    Paste the generated value at the prompt. Do not use the admin password as the signing secret.
 
-7. Build and deploy:
+7. Configure WhatsApp password recovery in the Cloudflare Pages dashboard under **Settings → Variables and Secrets**:
+
+   - Add `WHATSAPP_ACCESS_TOKEN` as an encrypted secret. Never put this token in the website, GitHub, or a chat message.
+   - Add `WHATSAPP_PHONE_NUMBER_ID` with the phone-number ID shown in the Meta WhatsApp app.
+   - Add `WHATSAPP_RECOVERY_NUMBER` with the trusted recipient number in international format using digits only (no `+`).
+   - Add `WHATSAPP_RECOVERY_TEMPLATE` with the name of an approved WhatsApp Utility template whose message body contains exactly one `{{1}}` parameter for the six-digit code.
+   - Add `WHATSAPP_RECOVERY_LANGUAGE` using the exact language/locale of that approved template (for example, `ar` or `en_US`).
+   - Add `WHATSAPP_GRAPH_API_VERSION` using a Graph API version currently supported by the Meta app (for example, `vXX.X`).
+
+   Create these settings in the **Production** environment. Recovery codes expire after five minutes; sending is limited to three codes per hour globally and per client IP, with a one-minute cooldown. Codes are stored only as keyed hashes, accepted once, and protected by a five-attempt limit. Changing the password invalidates existing admin sessions.
+
+8. Build and deploy:
 
    ```powershell
    npm run cf:deploy
@@ -67,6 +85,8 @@ Copy `.dev.vars.example` to `.dev.vars`, replace both example values with a loca
 ```powershell
 npx wrangler d1 execute mohamed-amer-projects --local --file=./schema.sql
 npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0002_project_controls.sql
+npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0003_site_content.sql
+npx wrangler d1 execute mohamed-amer-projects --local --file=./migrations/0004_admin_whatsapp_recovery.sql
 npm run build
 npm run cf:dev
 ```

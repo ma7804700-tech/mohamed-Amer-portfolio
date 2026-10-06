@@ -1,4 +1,4 @@
-import { clearSession, createSession, hashClientIp, isAuthorized, isSameOrigin, json, matchesPassword } from '../../_lib/admin.js'
+import { clearSession, createSession, hashClientIp, isAuthorized, isSameOrigin, json, matchesPassword, matchesStoredPassword } from '../../_lib/admin.js'
 
 const MAX_ATTEMPTS = 5
 const WINDOW_SECONDS = 15 * 60
@@ -28,7 +28,7 @@ async function recordFailedAttempt(db, ip) {
 
 export async function onRequestGet({ request, env }) {
   if (!env.ADMIN_PASSWORD || !env.ADMIN_SESSION_SECRET) return json({ error: 'Admin access is not configured.' }, 503)
-  return json({ authenticated: await isAuthorized(request, env.ADMIN_SESSION_SECRET) })
+  return json({ authenticated: await isAuthorized(request, env.ADMIN_SESSION_SECRET, env.PROJECTS_DB) })
 }
 
 export async function onRequestPost({ request, env }) {
@@ -51,13 +51,22 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Incorrect password.' }, 401)
   }
 
-  if (!await matchesPassword(body.password, env.ADMIN_PASSWORD)) {
+  const storedPassword = await env.PROJECTS_DB.prepare(
+    "SELECT password_salt, password_hash, updated_at FROM admin_passwords WHERE id = 'default'",
+  ).first()
+  const validPassword = storedPassword
+    ? await matchesStoredPassword(body.password, storedPassword.password_salt, storedPassword.password_hash)
+    : await matchesPassword(body.password, env.ADMIN_PASSWORD)
+
+  if (!validPassword) {
     await recordFailedAttempt(env.PROJECTS_DB, ip)
     return json({ error: 'Incorrect password.' }, 401)
   }
 
   await env.PROJECTS_DB.prepare('DELETE FROM login_attempts WHERE ip = ?').bind(ip).run()
-  return json({ authenticated: true }, 200, { 'Set-Cookie': await createSession(env.ADMIN_SESSION_SECRET, request) })
+  return json({ authenticated: true }, 200, {
+    'Set-Cookie': await createSession(env.ADMIN_SESSION_SECRET, request, storedPassword?.updated_at || 0),
+  })
 }
 
 export async function onRequestDelete({ request }) {

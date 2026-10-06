@@ -1,5 +1,6 @@
 import { ArrowUpRight, Play } from 'lucide-react'
-import { getVideoThumbnailUrl } from '../utils/googleDrive.ts'
+import { useState } from 'react'
+import { getGoogleDrivePreviewUrl, getVideoEmbedUrl, getVideoThumbnailUrl } from '../utils/googleDrive.ts'
 import { usePreferences } from '../context/PreferencesContext'
 import { translate } from '../data/translations'
 
@@ -15,9 +16,14 @@ export default function PortfolioCard({ project, index, onSelect }) {
     'AI Workflows': 'category.ai',
   }[project.category]
   const category = translate(language, categoryKey)
+  const [isPreviewing, setIsPreviewing] = useState(false)
+  const drivePreview = getGoogleDrivePreviewUrl(project.driveFileId || project.externalUrl)
+  const providerPreview = getVideoEmbedUrl(project.videoSrc || project.externalUrl)
+  const previewUrl = drivePreview || providerPreview
+  const directVideo = project.videoSrc && /\.(?:mp4|webm|ogg)(?:$|[?#])/i.test(project.videoSrc)
 
   return (
-    <button className={`project-card project-${project.shape}`} data-project-card dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={() => onSelect(project)} aria-label={`${language === 'ar' ? 'افتح ملف المشروع' : 'Open case file'} ${project.title}`}>
+    <button className={`project-card project-${project.shape}`} data-project-card dir={language === 'ar' ? 'rtl' : 'ltr'} onClick={() => onSelect(project)} onMouseEnter={() => setIsPreviewing(true)} onMouseLeave={() => setIsPreviewing(false)} onFocus={() => setIsPreviewing(true)} onBlur={() => setIsPreviewing(false)} aria-label={`${language === 'ar' ? 'افتح ملف المشروع' : 'Open case file'} ${project.title}`}>
       <span className="case-file-tab">{language === 'ar' ? 'ملف قضية' : 'CASE FILE'} <span>NO. {displayId}</span></span>
       <span className="case-paperclip" aria-hidden="true" />
       <div className="case-file-paper">
@@ -32,6 +38,8 @@ export default function PortfolioCard({ project, index, onSelect }) {
             <span className="project-art-category">{category}</span>
           </div>
           {poster && <img src={poster} alt={project.imageAlt} loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none' }} />}
+          {isPreviewing && directVideo && <video className="project-hover-video" src={project.videoSrc} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />}
+          {isPreviewing && !directVideo && previewUrl && <iframe className="project-hover-video" src={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1`} title={`${project.title} video preview`} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} />}
           <span className="project-number">{displayId}</span>
           <span className="project-play"><Play fill="currentColor" size={16} /></span>
           <span className="confidential-stamp">{language === 'ar' ? 'سري' : <>CASE<br />STUDY</>}</span>

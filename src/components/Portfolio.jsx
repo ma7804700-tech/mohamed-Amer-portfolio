@@ -5,6 +5,7 @@ import PortfolioCard from './PortfolioCard'
 import CrimeThreads from './CrimeThreads'
 import { usePreferences } from '../context/PreferencesContext'
 import { translate } from '../data/translations'
+import SpiderWeb from './SpiderWeb'
 
 const filters = [
   ['All', 'filter.all'],
@@ -167,6 +168,7 @@ export default function Portfolio({ onSelect }) {
 
   return (
     <section className="portfolio section-wrap section-pad" id="work">
+      <SpiderWeb className="spider-web-portfolio" />
       <div className="section-kicker"><span>{t('portfolio.kicker')}</span><span>{allProjects.length} {language === 'ar' ? 'مشروعًا · أعمال مختارة' : 'PROJECTS · SELECTED CUTS'}</span></div>
       <div className="section-heading-row">
         <div><h2>{t('portfolio.selected')}<br /><span>{t('portfolio.work')}<span className="period">.</span></span></h2><span className="scribble work-scribble">{t('portfolio.note')}</span></div>

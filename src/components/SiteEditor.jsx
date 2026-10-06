@@ -61,6 +61,7 @@ export default function SiteEditor() {
   }, [siteContent])
 
   const activeGroup = editableTranslationGroups.find((group) => group.id === activeSection)
+  const hasUnsavedChanges = JSON.stringify(draft) !== JSON.stringify(siteContent)
   const editableKeys = useMemo(() => {
     if (!activeGroup) return []
     return Object.keys(translations.en).filter((key) => activeGroup.prefix.some((prefix) => key.startsWith(prefix)))
@@ -118,9 +119,9 @@ export default function SiteEditor() {
       <header className="site-editor-toolbar">
         <div className="site-editor-live"><Eye size={15} /><span>معاينة الموقع</span><i /></div>
         <div className="site-editor-actions">
-          {saved && <span className="site-editor-saved"><Check size={14} />تم الحفظ</span>}
+          {saved && !hasUnsavedChanges && <span className="site-editor-saved"><Check size={14} />تم الحفظ</span>}
           <button className="site-editor-reset" type="button" onClick={resetDraft} disabled={saving}><RotateCcw size={14} />استعادة الافتراضي</button>
-          <button className="site-editor-save" type="submit" disabled={saving}><Save size={15} />{saving ? 'جارٍ الحفظ…' : 'حفظ ونشر التعديلات'}</button>
+          <button className={`site-editor-save${hasUnsavedChanges ? ' has-unsaved-changes' : ''}`} type="submit" disabled={saving || !hasUnsavedChanges}><Save size={15} />{saving ? 'جارٍ الحفظ…' : hasUnsavedChanges ? 'حفظ التغييرات' : 'تم حفظ التغييرات'}</button>
         </div>
       </header>
       {error && <p className="admin-message" role="alert">{error}</p>}

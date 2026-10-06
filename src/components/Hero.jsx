@@ -4,6 +4,7 @@ import { usePreferences } from '../context/PreferencesContext'
 import { translate } from '../data/translations'
 import { siteAsset } from '../utils/siteAsset'
 import { useSiteContent } from '../context/SiteContentContext'
+import SpiderWeb from './SpiderWeb'
 
 export default function Hero() {
   const { language } = usePreferences()
@@ -13,6 +14,7 @@ export default function Hero() {
 
   return (
     <section className="hero section-wrap" id="top">
+      <SpiderWeb className="spider-web-hero" />
       <video className="hero-background-video" autoPlay muted loop playsInline preload="metadata" poster={siteAsset(media.heroPoster)} aria-hidden="true">
         <source src={siteAsset(media.heroVideo)} type="video/mp4" />
       </video>
